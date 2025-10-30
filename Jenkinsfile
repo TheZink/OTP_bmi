@@ -22,21 +22,21 @@ tools{
         }
         stage('Build') {
             steps {
-                dir('demo') {
+                {
                     bat 'mvn clean install'
                 }
             }
         }
         stage('Test') {
             steps {
-                dir('demo') {
+                {
                     bat 'mvn test'
                 }
             }
         }
         stage('Code Coverage') {
             steps {
-                dir('demo') {
+                {
                     bat 'mvn jacoco:report'
                 }
             }
