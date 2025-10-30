@@ -22,4 +22,4 @@ COPY target/OTP_BMI-1.0-SNAPSHOT-shaded.jar app.jar
 # Set X11 display (Windows host with Xming/X11)
 ENV DISPLAY=host.docker.internal:0.0
 
-CMD [ "java", "--module-path", "/javafx-sdk/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "target/bmi.jar" ]
+CMD [ "java", "--module-path", "/javafx-sdk/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "target/OTP_BMI-1.0-SNAPSHOT-shaded.jar.jar" ]
