@@ -16,10 +16,8 @@ RUN mkdir -p /javafx-sdk \
     && mv /javafx-sdk/javafx-sdk-21.0.2/lib /javafx-sdk/lib \
     && rm -rf /javafx-sdk/javafx-sdk-21.0.2 javafx.zip
 
-COPY demo/pom.xml ./
-COPY demo/src ./src
 
-RUN mvn package
+COPY target/OTP_BMI-1.0-SNAPSHOT-shaded.jar app.jar
 
 # Set X11 display (Windows host with Xming/X11)
 ENV DISPLAY=host.docker.internal:0.0
