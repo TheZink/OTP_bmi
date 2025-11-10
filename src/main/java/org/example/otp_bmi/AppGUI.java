@@ -1,8 +1,8 @@
 package org.example.otp_bmi;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -13,39 +13,37 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.Map;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 public class AppGUI extends Application {
-    private ResourceBundle rb;
     private BMICalc bmiCalc = new BMICalc();
+    private Map<String, String> localizedStrings;
 
-    private double bmi = 0.0;
+    private Label label_info = new Label();
+    private TextField heightField = new TextField();
+    private TextField weightField = new TextField();
+    private Button calcButton = new Button();
+    private Button clearButton = new Button();
+    private Label label_result = new Label();
+    private Label label_time = new Label();
+
+    private String selectedLanguage;
+
 
     @Override
     public void start(Stage stage) throws IOException {
-        setLocale("en", "US");
+
+        setLanguage(new Locale("en", "US"));
+        selectedLanguage = "en";
 
         ComboBox<String> langComboBox = new ComboBox<>();
-        langComboBox.getItems().setAll("English", "Finnish", "Swedish", "Japanese", "Vietnamese","Urdu");
+        langComboBox.getItems().setAll("English", "Finnish", "Swedish", "Japanese", "Vietnamese", "Urdu", "France");
         langComboBox.getSelectionModel().selectFirst();
-
-        Label label_info = new Label();
-        label_info.setText(rb.getString("Prompt.prompt"));
-
-        TextField heightField = new TextField();
-        heightField.setPromptText(rb.getString("Prompt.height"));
-
-        TextField weightField = new TextField();
-        weightField.setPromptText(rb.getString("Prompt.weight"));
-
-        Button calcButton = new Button();
-        calcButton.setText(rb.getString("Button.calc"));
-
-        Button clearButton = new Button();
-        clearButton.setText(rb.getString("Button.clear"));
-
-        Label label_result = new Label();
 
         // Language selection handler
         langComboBox.setOnAction(event -> {
@@ -53,50 +51,39 @@ public class AppGUI extends Application {
 
             switch (selectLanguage) {
                 case "English":
-                    setLocale("en", "US");
+                    setLanguage(new Locale("en", "US"));
+                    selectedLanguage = "en";
                     break;
                 case "Finnish":
-                    setLocale("fi", "FI");
+                    setLanguage(new Locale("fi", "FI"));
+                    selectedLanguage = "fi";
                     break;
                 case "Swedish":
-                    setLocale("sv", "SE");
+                    setLanguage(new Locale("sv", "SE"));
+                    selectedLanguage = "sv";
                     break;
                 case "Japanese":
-                    setLocale("ja", "JP");
+                    setLanguage(new Locale("ja", "JP"));
+                    selectedLanguage = "ja";
                     break;
                 case "Vietnamese":
-                    setLocale("vi", "VN");
+                    setLanguage(new Locale("vi", "VN"));
+                    selectedLanguage = "vi";
+                    break;
                 case "Urdu":
-                    setLocale("ur", "PK");
+                    setLanguage(new Locale("ur", "PK"));
+                    selectedLanguage = "ur";
+                    break;
+                case "France":
+                    setLanguage(new Locale("fr", "FR"));
+                    selectedLanguage = "fr";
+                    break;
             }
-
-            // Clear field
-            heightField.setText("");
-            weightField.setText("");
-            
-            // Refresh texts
-            label_info.setText(rb.getString("Prompt.prompt"));
-            heightField.setPromptText(rb.getString("Prompt.height"));
-            weightField.setPromptText(rb.getString("Prompt.weight"));
-            calcButton.setText(rb.getString("Button.calc"));
-            clearButton.setText(rb.getString("Button.clear"));
-            label_result.setText("");
         });
 
         // Calculate BMI handler
         calcButton.setOnAction(event -> {
-            try {
-                Double height = Double.parseDouble(heightField.getText().trim());
-                Double weight = Double.parseDouble(weightField.getText().trim());
-
-                bmi = bmiCalc.calculate(weight, height);
-
-                label_result.setText(rb.getString("Info.result") +": " + String.format("%.2f", bmi));
-
-            } catch (NumberFormatException ex){
-                Alert alert = new Alert(Alert.AlertType.WARNING, rb.getString("Info.error"));
-                alert.showAndWait();
-            }
+            onCalculateClick(event);
         });
 
         // Clear button handler
@@ -105,8 +92,6 @@ public class AppGUI extends Application {
             heightField.setText("");
             label_result.setText("");
 
-            heightField.setPromptText(rb.getString("Prompt.height"));
-            weightField.setPromptText(rb.getString("Prompt.weight"));
         });
 
         Label langLabel = new Label("Language");
@@ -116,28 +101,65 @@ public class AppGUI extends Application {
         inputGrid.setHgap(8);
         inputGrid.setVgap(8);
         inputGrid.add(langRow, 0, 0);
-        inputGrid.add(heightField, 0,1);
-        inputGrid.add(weightField, 2, 1);
+        inputGrid.add(heightField, 0, 2);
+        inputGrid.add(weightField, 2, 2);
         
         GridPane buttonGrid = new GridPane();
-        buttonGrid.setHgap(0);
-        buttonGrid.setVgap(0);
+        buttonGrid.setHgap(8);
+        buttonGrid.setVgap(8);
         buttonGrid.add(calcButton, 0, 1);
         buttonGrid.add(clearButton, 1, 1);
         buttonGrid.add(label_result, 3, 1);
+        buttonGrid.add(label_time, 4, 1);
 
-        
-        VBox root = new VBox(inputGrid, buttonGrid);
+        GridPane textGrid = new GridPane();
+        textGrid.setHgap(8);
+        textGrid.setVgap(8);
+        textGrid.add(label_time, 0,1);
+        textGrid.add(label_result, 2,1);
 
-        Scene scene = new Scene(root, 400, 130);
+        VBox root = new VBox(inputGrid, buttonGrid, textGrid);
+
+        Scene scene = new Scene(root, 350, 130);
         stage.setTitle("BMI (Ilkka Sinkonen)");
         stage.setScene(scene);
         stage.show();
     }
 
-    private void setLocale(String lang, String country){
-        Locale locale = new Locale(lang, country);
-        rb = ResourceBundle.getBundle("MessageBundle", locale);
+    private void setLanguage(Locale locale){
+        label_result.setText("");
+        localizedStrings = LocalizationService.getLocalizedStrings(locale);
+        label_info.setText(localizedStrings.getOrDefault("info", "Welcome to the BMI calculator. Enter your information in the fields."));
+        weightField.setPromptText(localizedStrings.getOrDefault("weight", "Weight"));
+        heightField.setPromptText(localizedStrings.getOrDefault("height", "Height"));
+        calcButton.setText(localizedStrings.getOrDefault("calculate", "Calculate"));
+        clearButton.setText(localizedStrings.getOrDefault("clear", "Clear"));
+        displayLocalTime(locale);
+    }
+
+    private void displayLocalTime(Locale locale){
+        LocalTime currentTime = LocalTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss", locale);
+        String formattedTime = currentTime.format(formatter);
+        label_time.setText(localizedStrings.getOrDefault("localTime", "Local Time") + " " + formattedTime);
+    }
+
+    public void onCalculateClick(ActionEvent actionEvent) {
+        try {
+            double weight = Double.parseDouble(weightField.getText());
+            double height = Double.parseDouble(heightField.getText());
+            double bmi = bmiCalc.calculate(weight,height);
+
+            DecimalFormat df = new DecimalFormat("#0.00");
+            label_result.setText(localizedStrings.getOrDefault("result", "Your BMI is") + " " + df.format(bmi));
+
+            // Save to database
+            String language = Locale.getDefault().getLanguage(); // or store current locale
+            BMIResultService.saveResult(weight, height, bmi, selectedLanguage);
+
+        } catch (NumberFormatException e) {
+            label_result.setText(localizedStrings.getOrDefault("invalid", "Invalid input"));
+        }
     }
 
     public static void main(String[] args) {
